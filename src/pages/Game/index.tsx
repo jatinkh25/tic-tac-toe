@@ -7,6 +7,12 @@ import { contractABI } from '../../utils/data/abiData'
 import { convertHexadecimalToNumber } from '../../utils/functions'
 import styles from './Game.module.scss'
 
+declare global {
+  interface Window {
+    ethereum?: any
+  }
+}
+
 function Game() {
   const [contract, setContract] = useState<ethers.Contract>()
   const [gameId, setGameId] = useState<number | null>(null)
@@ -20,6 +26,8 @@ function Game() {
     resetGame()
 
     const connectWallet = async () => {
+      if (window.ethereum == null) return
+
       const { ethereum } = window
 
       // If user hasn't install Metamask
