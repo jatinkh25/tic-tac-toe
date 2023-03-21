@@ -48,6 +48,7 @@ function Game() {
           await ethereum.request({ method: 'eth_requestAccounts' })
         } catch (err: any) {
           toast.error('Please connect at least one account to start the game')
+          setIsLoading(false)
           return
         }
 
