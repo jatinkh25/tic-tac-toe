@@ -221,7 +221,7 @@ function Game() {
 
       setGameId(game.gameId)
       setIsOtherPlayerEntered(game.isStarted)
-      
+
       if (senderAddresss === game.playerOne.toLowerCase()) {
         setPlayerName('Player-1')
       } else {
@@ -263,7 +263,7 @@ function Game() {
               placeholder="Enter Game Id to view"
               onChange={handleViewerGameIdChange}
             />
-            <button className={styles.btn} onClick={handleViewGame}>
+            <button className={styles.btn} onClick={handleViewGame} disabled={isLoading}>
               View Game
             </button>
           </div>
