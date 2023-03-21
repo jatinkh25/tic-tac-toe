@@ -66,17 +66,20 @@ function Game() {
       }
     }
 
-    const checkPrevGameId = () => {
-      const gameId = getSessionStorageItem('gameId')
+    connectWallet()
+  }, [window.ethereum])
 
-      if (gameId) {
-        setGameId(parseInt(gameId))
+  useEffect(() => {
+    const setPrevGameStateIfExists = () => {
+      const gameIdStr = getSessionStorageItem('gameId')
+
+      if (gameIdStr) {
+        handleViewGame(parseInt(gameIdStr))
       }
     }
 
-    connectWallet()
-    checkPrevGameId()
-  }, [window.ethereum])
+    setPrevGameStateIfExists()
+  }, [contract])
 
   // Function to start a new game
   const handleStartGame = async () => {
@@ -225,13 +228,14 @@ function Game() {
     resetGame()
   }
 
-  const handleViewGame = async () => {
+  const handleViewGame = async (gameId: number | null) => {
     // Null checks
-    if (contract == null) return
+    if (contract == null || gameId == null) return
+    console.log(gameId)
 
     try {
       setIsLoading(true)
-      const game = await contract.games(viewerGameIdInput)
+      const game = await contract.games(gameId)
       const senderAddresss = window.ethereum.selectedAddress.toLowerCase()
 
       if (
@@ -293,7 +297,10 @@ function Game() {
               placeholder="Enter Game Id to view"
               onChange={handleViewerGameIdChange}
             />
-            <button className={styles.btn} onClick={handleViewGame} disabled={isLoading}>
+            <button
+              className={styles.btn}
+              onClick={() => handleViewGame(viewerGameIdInput)}
+              disabled={isLoading}>
               View Game
             </button>
           </div>
