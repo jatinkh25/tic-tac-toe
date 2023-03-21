@@ -18,6 +18,7 @@ function Game() {
   const [gameId, setGameId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [joinerGameIdInput, setJoinerGameIdInput] = useState<number | null>(null)
+  const [viewerGameIdInput, setViewerGameIdInput] = useState<number | null>(null)
   const [playerName, setPlayerName] = useState<string>('')
   const [isOtherPlayerEntered, setIsOtherPlayerEntered] = useState(true)
 
@@ -41,7 +42,12 @@ function Game() {
       try {
         setIsLoading(true)
 
-        await ethereum.request({ method: 'eth_requestAccounts' })
+        try {
+          await ethereum.request({ method: 'eth_requestAccounts' })
+        } catch (err: any) {
+          toast.error('Please connect at least one account to start the game')
+          return
+        }
 
         // Creating a Web3 provider instance
         const provider = new ethers.providers.Web3Provider(ethereum)
@@ -142,8 +148,12 @@ function Game() {
     setPlayerName('')
   }
 
-  const handleGameIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleJoinerGameIdChange = (event: ChangeEvent<HTMLInputElement>) => {
     setJoinerGameIdInput(parseInt(event.target.value))
+  }
+
+  const handleViewerGameIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setViewerGameIdInput(parseInt(event.target.value))
   }
 
   const checkIfOtherPlayerEntered = (gameId: number) => {
@@ -198,29 +208,74 @@ function Game() {
     handleStartGame()
   }
 
+  const handleViewGame = async () => {
+    // Null checks
+    if (contract == null) return
+
+    try {
+      setIsLoading(true)
+      const game = await contract.games(viewerGameIdInput)
+      const senderAddresss = window.ethereum.selectedAddress.toLowerCase()
+
+      if (
+        senderAddresss !== game.playerOne.toLowerCase() &&
+        senderAddresss !== game.playerTwo.toLowerCase()
+      ) {
+        toast.error("You aren't one of the players of this game")
+        return
+      }
+
+      setGameId(game.gameId)
+      setIsOtherPlayerEntered(game.isStarted)
+
+      if (senderAddresss === game.playerOne.toLowerCase()) {
+        setPlayerName('Player-1')
+      } else {
+        setPlayerName('Player-2')
+      }
+    } catch (err: any) {
+      toast.error(err.reason)
+    }
+  }
+
   return (
     <Layout isLoading={isLoading}>
       <div className={styles.game}>
-        <div className={styles.btn_container}>
+        <div className={styles.btns_container}>
           <button
             onClick={handleStartGame}
-            className={styles.start_game_btn}
+            className={styles.btn}
             disabled={isGameStarted() || isLoading}>
             Start Game
           </button>
           <p>Or</p>
-          <div className={styles.join_game_container}>
-            <input type="text" placeholder="Enter Game Id Here" onChange={handleGameIdChange} />
+          <div className={styles.input_container}>
+            <input
+              type="text"
+              placeholder="Enter Game Id to join"
+              onChange={handleJoinerGameIdChange}
+            />
             <button
               onClick={handleJoinGame}
-              className={styles.join_game_btn}
+              className={styles.btn}
               disabled={isGameStarted() || isLoading}>
               Join Game
             </button>
           </div>
+          <div className={styles.horizontal_divider} />
+          <div className={styles.input_container}>
+            <input
+              type="text"
+              placeholder="Enter Game Id to view"
+              onChange={handleViewerGameIdChange}
+            />
+            <button className={styles.btn} onClick={handleViewGame} disabled={isLoading}>
+              View Game
+            </button>
+          </div>
 
           {isOnlyPlayerOneExists() && (
-            <button className={styles.cancel_game_btn} onClick={handleCancelGame}>
+            <button className={styles.btn} onClick={handleCancelGame}>
               Cancel Game
             </button>
           )}

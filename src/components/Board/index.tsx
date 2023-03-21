@@ -31,7 +31,7 @@ function Board({ contract, gameId, yourName, startNewGame }: BoardProps) {
       }
     }
 
-    const getBothPlayers = async () => {
+    const setGameState = async () => {
       // Null checks
       if (contract == null || gameId == null) return
 
@@ -41,17 +41,21 @@ function Board({ contract, gameId, yourName, startNewGame }: BoardProps) {
 
         setPlayerOneAddress(game.playerOne.toLowerCase())
         setPlayerTwoAddress(game.playerTwo.toLowerCase())
+        setWinner(game.winner)
+        setPlayerReward(game.winner, convertHexadecimalToNumber(game.rewardPool))
 
-        // First turn is of Player-1
-        if (yourName === 'Player-1') {
+        // Checking the next move address to set the player turn
+        if (game.nextMove.toLowerCase() === window.ethereum.selectedAddress.toLowerCase()) {
           setIsYourTurn(true)
+        } else {
+          setIsYourTurn(false)
         }
       } catch (err: any) {
         toast.error(err.reason)
       }
     }
 
-    getBothPlayers()
+    setGameState()
     getGameBoard()
   }, [contract, gameId])
 
@@ -187,10 +191,10 @@ function Board({ contract, gameId, yourName, startNewGame }: BoardProps) {
 
   const setPlayerReward = (winner: number, rewardPool: number) => {
     // Is user Player-1 and Player-1 is winner
-    const areYouPlayer1AndWinner = winner === 0 && yourName === 'Player-1'
+    const areYouPlayer1AndWinner = winner === 1 && yourName === 'Player-1'
 
     // Is user Player-2 and Player-2 is winner
-    const areYouPlayer2AndWinner = winner === 1 && yourName === 'Player-2'
+    const areYouPlayer2AndWinner = winner === 2 && yourName === 'Player-2'
 
     // Both players get equal amount in case of a draw
     if (winner === 3) setYourReward(rewardPool / 2)
