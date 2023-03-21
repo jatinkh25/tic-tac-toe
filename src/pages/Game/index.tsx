@@ -4,7 +4,12 @@ import { toast } from 'react-toastify'
 import { Board, Layout } from '../../components'
 import { CONTRACT_ADDRESS, ENTRY_FEES } from '../../utils/constants'
 import { contractABI } from '../../utils/data/abiData'
-import { convertHexadecimalToNumber } from '../../utils/functions'
+import {
+  clearSessionStorage,
+  convertHexadecimalToNumber,
+  getSessionStorageItem,
+  setSessionStorageItem
+} from '../../utils/functions'
 import styles from './Game.module.scss'
 
 declare global {
@@ -23,9 +28,6 @@ function Game() {
   const [isOtherPlayerEntered, setIsOtherPlayerEntered] = useState(true)
 
   useEffect(() => {
-    // Resetting state variables if previously exist
-    resetGame()
-
     const connectWallet = async () => {
       if (window.ethereum == null) return
 
@@ -46,6 +48,7 @@ function Game() {
           await ethereum.request({ method: 'eth_requestAccounts' })
         } catch (err: any) {
           toast.error('Please connect at least one account to start the game')
+          setIsLoading(false)
           return
         }
 
@@ -67,6 +70,18 @@ function Game() {
     connectWallet()
   }, [window.ethereum])
 
+  useEffect(() => {
+    const setPrevGameStateIfExists = () => {
+      const gameIdStr = getSessionStorageItem('gameId')
+
+      if (gameIdStr) {
+        handleViewGame(parseInt(gameIdStr))
+      }
+    }
+
+    setPrevGameStateIfExists()
+  }, [contract])
+
   // Function to start a new game
   const handleStartGame = async () => {
     if (contract == null) return
@@ -86,6 +101,9 @@ function Game() {
       // Converting from hexadecimal to number
       const gameId = convertHexadecimalToNumber(event.args[0])
       setGameId(gameId)
+
+      // Setting gameId in session storage to persist refreshes
+      setSessionStorageItem('gameId', gameId.toString())
 
       // The user who created the game is assigned name as Player-1
       setPlayerName('Player-1')
@@ -124,6 +142,9 @@ function Game() {
       const gameId = convertHexadecimalToNumber(event.args[0])
       setGameId(gameId)
 
+      // Setting gameId in session storage to persist refreshes
+      setSessionStorageItem('gameId', gameId.toString())
+
       /**
        * The user who successfully joins a game by clicking the join button
        *  is assigned name Player-2
@@ -146,6 +167,7 @@ function Game() {
     setJoinerGameIdInput(null)
     setIsOtherPlayerEntered(false)
     setPlayerName('')
+    clearSessionStorage()
   }
 
   const handleJoinerGameIdChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -205,16 +227,15 @@ function Game() {
 
   const startNewGame = () => {
     resetGame()
-    handleStartGame()
   }
 
-  const handleViewGame = async () => {
+  const handleViewGame = async (gameId: number | null) => {
     // Null checks
-    if (contract == null) return
+    if (contract == null || gameId == null) return
 
     try {
       setIsLoading(true)
-      const game = await contract.games(viewerGameIdInput)
+      const game = await contract.games(gameId)
       const senderAddresss = window.ethereum.selectedAddress.toLowerCase()
 
       if (
@@ -222,10 +243,15 @@ function Game() {
         senderAddresss !== game.playerTwo.toLowerCase()
       ) {
         toast.error("You aren't one of the players of this game")
+        setIsLoading(false)
         return
       }
 
       setGameId(game.gameId)
+
+      // Setting gameId in session storage to persist refreshes
+      setSessionStorageItem('gameId', game.gameId.toString())
+
       setIsOtherPlayerEntered(game.isStarted)
 
       if (senderAddresss === game.playerOne.toLowerCase()) {
@@ -233,8 +259,10 @@ function Game() {
       } else {
         setPlayerName('Player-2')
       }
+      setIsLoading(false)
     } catch (err: any) {
       toast.error(err.reason)
+      setIsLoading(false)
     }
   }
 
@@ -269,7 +297,10 @@ function Game() {
               placeholder="Enter Game Id to view"
               onChange={handleViewerGameIdChange}
             />
-            <button className={styles.btn} onClick={handleViewGame} disabled={isLoading}>
+            <button
+              className={styles.btn}
+              onClick={() => handleViewGame(viewerGameIdInput)}
+              disabled={isLoading}>
               View Game
             </button>
           </div>
