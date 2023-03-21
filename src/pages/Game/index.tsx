@@ -42,10 +42,9 @@ function Game() {
       try {
         setIsLoading(true)
 
-        const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-        console.log(accounts)
-
-        if (accounts.length === 0) {
+        try {
+          await ethereum.request({ method: 'eth_requestAccounts' })
+        } catch (err: any) {
           toast.error('Please connect at least one account to start the game')
           return
         }
@@ -60,7 +59,6 @@ function Game() {
         setContract(contract)
         setIsLoading(false)
       } catch (err: any) {
-        console.log(err)
         toast.error(err.reason)
         setIsLoading(false)
       }
@@ -215,6 +213,7 @@ function Game() {
     if (contract == null) return
 
     try {
+      setIsLoading(true)
       const game = await contract.games(viewerGameIdInput)
       const senderAddresss = window.ethereum.selectedAddress.toLowerCase()
 
