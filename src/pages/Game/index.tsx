@@ -231,7 +231,6 @@ function Game() {
   const handleViewGame = async (gameId: number | null) => {
     // Null checks
     if (contract == null || gameId == null) return
-    console.log(gameId)
 
     try {
       setIsLoading(true)
