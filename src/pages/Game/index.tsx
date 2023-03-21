@@ -42,7 +42,12 @@ function Game() {
       try {
         setIsLoading(true)
 
-        await ethereum.request({ method: 'eth_requestAccounts' })
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+
+        if (accounts.length === 0) {
+          toast.error('Please connect at least one account to start the game')
+          return
+        }
 
         // Creating a Web3 provider instance
         const provider = new ethers.providers.Web3Provider(ethereum)
