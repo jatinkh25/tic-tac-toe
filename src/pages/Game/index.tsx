@@ -25,7 +25,7 @@ function Game() {
   const [joinerGameIdInput, setJoinerGameIdInput] = useState<number | null>(null)
   const [viewerGameIdInput, setViewerGameIdInput] = useState<number | null>(null)
   const [playerName, setPlayerName] = useState<string>('')
-  const [isOtherPlayerEntered, setIsOtherPlayerEntered] = useState(true)
+  const [isOtherPlayerEntered, setIsOtherPlayerEntered] = useState(false)
 
   useEffect(() => {
     const connectWallet = async () => {
