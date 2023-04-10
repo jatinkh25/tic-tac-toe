@@ -29,8 +29,6 @@ function Game() {
 
   useEffect(() => {
     const connectWallet = async () => {
-      if (window.ethereum == null) return
-
       const { ethereum } = window
 
       // If user hasn't install Metamask
