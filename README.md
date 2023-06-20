@@ -49,7 +49,7 @@ The Tic Tac Toe game includes the following features:
 
 1. **Join and Leave**: Users can join a game session at any time and leave the game if needed. They can also rejoin later to continue playing.
 
-2. **Reward System**: Players receive rewards when they win a game. The specific details of the rewards can be customized based on the game logic.
+2. **Reward System**: Players receive rewards when they win a game.
 
 3. **Previous Game Records**: Users can view their previous game records, including the results and details of each game played.
 
